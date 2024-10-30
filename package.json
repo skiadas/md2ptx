@@ -6,17 +6,24 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write .",
+    "lint": "eslint src __tests__",
     "test": "jest"
   },
-  "keywords": ["markdown", "pretext", "converter"],
+  "keywords": [
+    "markdown",
+    "pretext",
+    "converter"
+  ],
   "author": "Haris Skiadas <cskiadas@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "eslint": "^9.13.0",
     "jest": "^29.7.0",
     "prettier": "^3.3.3",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.12.2"
   },
   "dependencies": {
     "marked": "^14.1.3"

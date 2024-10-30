@@ -3,7 +3,7 @@ import { marked, Token, Tokens } from 'marked';
 
 const headingNames = ['', 'chapter', 'section', 'subsection'];
 const headingPrefixes = ['', 'ch', 'sec', 'sub'];
-let headingStack: Tokens.Heading[] = [];
+const headingStack: Tokens.Heading[] = [];
 
 function closeHeadingsUpTo(depth: number): string {
   let result = '';
