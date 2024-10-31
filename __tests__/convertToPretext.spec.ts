@@ -14,4 +14,9 @@ describe('Markdown element behaviors', () => {
   test('escaped characters are unescaped', () => {
     expect(markdownToPretext('\\.')).toBe('<p>.</p>');
   });
+  test('titles get lowercased when becoming ids', () => {
+    expect(markdownToPretext('# Title Here')).toBe(
+      '<chapter xml:id="ch-title-here">\n<title>Title Here</title>\n</chapter>\n',
+    );
+  });
 });

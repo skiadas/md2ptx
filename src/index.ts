@@ -61,7 +61,7 @@ function processHeading(token: Tokens.Heading): string {
   const preamble = closeHeadingsUpTo(token.depth);
   pushHeading(token);
   const title = token.tokens.map(processToken).join('');
-  const id = title.replace(/\W+/g, '-');
+  const id = title.replace(/\W+/g, '-').toLowerCase();
   return `${preamble}<${headingNames[token.depth]} xml:id="${
     headingPrefixes[token.depth]
   }-${id}">\n<title>${title}</title>\n`;
