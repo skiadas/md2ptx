@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write .",
+    "format-check": "prettier -c .",
     "lint": "eslint src __tests__",
     "test": "jest"
   },
