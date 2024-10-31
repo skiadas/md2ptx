@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write .",
-    "format-check": "prettier -c .",
+    "format": "prettier --write src __tests__",
+    "format-check": "prettier -c src __tests__",
     "lint": "eslint src __tests__",
     "test": "jest"
   },
