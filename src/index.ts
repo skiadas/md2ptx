@@ -34,10 +34,6 @@ function escapeXml(unsafe: string) {
         return '&amp;';
       default:
         return c;
-      // case "'":
-      //   return "&apos;";
-      // case '"':
-      //   return "&quot;";
     }
   });
 }
@@ -117,7 +113,6 @@ function processToken(token: Token): string {
     case 'del':
       return wrap('delete', token.tokens, '');
     case 'link':
-      console.log(token);
       // Note: we are losing the "title" that a Markdown link may have
       // As the url attribute doesn't appear to have an appropriate entry
       return wrap('url', token.tokens, '', new Map([['href', token.href]]));
@@ -140,11 +135,8 @@ function processToken(token: Token): string {
 function convertMarkdown(md: string) {
   const tokens = marked.lexer(md);
   return tokens.map(processToken).join('\n') + closeHeadingsUpTo(0);
-  // return JSON.stringify(tokens);
 }
 
 export function markdownToPretext(text: string) {
-  const result = convertMarkdown(text);
-  console.log(result);
-  return result;
+  return convertMarkdown(text);
 }
