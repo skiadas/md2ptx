@@ -107,7 +107,7 @@ function processToken(token: Token): string {
     case 'blockquote':
       return wrap('blockquote', token.tokens);
     case 'list':
-      return "<p>" + wrap(token.ordered ? 'ol' : 'ul', token.items) + "</p>";
+      return '<p>' + wrap(token.ordered ? 'ol' : 'ul', token.items) + '</p>';
     case 'list_item':
       return wrap('li', token.tokens, '');
     case 'paragraph':
