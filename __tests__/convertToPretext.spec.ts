@@ -19,4 +19,19 @@ describe('Markdown element behaviors', () => {
       '<chapter xml:id="ch-title-here">\n<title>Title Here</title>\n</chapter>\n',
     );
   });
+  test('single quotes stay normal', () => {
+    expect(markdownToPretext("I can't have that.")).toBe(
+      "<p>I can't have that.</p>",
+    );
+  });
+  test('quoted strings should be wrapped in <q> instead', () => {
+    expect(markdownToPretext('a "quote" here')).toBe(
+      '<p>a <q>quote</q> here</p>',
+    );
+  });
+  test('single quoted strings should be wrapped in <sq> instead', () => {
+    expect(markdownToPretext("a 'quoted string' here")).toBe(
+      '<p>a <sq>quoted string</sq> here</p>',
+    );
+  });
 });

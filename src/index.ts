@@ -42,6 +42,14 @@ function escapeXml(unsafe: string) {
   });
 }
 
+function fixQuotes(s: string): string {
+  return s
+    .replace(/&amp;quot;/g, '"')
+    .replace(/&amp;#39;/g, "'")
+    .replace(/(?<=\s)"(.*)"/g, '<q>$1</q>')
+    .replace(/(?<=\s)'(.*)'/g, '<sq>$1</sq>');
+}
+
 function wrap(
   tag: string,
   tokens?: Token[],
@@ -98,7 +106,7 @@ function processToken(token: Token): string {
       if ('tokens' in token) {
         return token.tokens!.map(processToken).join('');
       } else {
-        return escapeXml(token.text);
+        return fixQuotes(escapeXml(token.text));
       }
     case 'codespan':
       return `<c>${token.text}</c>`;
