@@ -34,4 +34,20 @@ describe('Markdown element behaviors', () => {
       '<p>a <sq>quoted string</sq> here</p>',
     );
   });
+  test('lists are wrapped in their own paragraph by default', () => {
+    expect(
+      markdownToPretext('a paragraph then a list.\n\n1. item 1\n2. item 2'),
+    ).toBe(
+      '<p>a paragraph then a list.</p>\n\n\n\n<p><ol>\n<li>item 1</li>\n<li>item 2</li>\n</ol></p>',
+    );
+  });
+  test('lists merge in prior paragraph if set in option', () => {
+    expect(
+      markdownToPretext('a paragraph then a list.\n\n1. item 1\n2. item 2', {
+        mergeListToParagraph: true,
+      }),
+    ).toBe(
+      '<p>a paragraph then a list.\n\n\n\n<ol>\n<li>item 1</li>\n<li>item 2</li>\n</ol></p>',
+    );
+  });
 });

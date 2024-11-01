@@ -5,6 +5,18 @@ const headingNames = ['', 'chapter', 'section', 'subsection'];
 const headingPrefixes = ['', 'ch', 'sec', 'sub'];
 const headingStack: Tokens.Heading[] = [];
 
+interface AllOptions {
+  // If true, tries to merge a list to the paragraph preceding it
+  // If false, keeps the list in its own paragraph
+  mergeListToParagraph: boolean;
+}
+
+type Options = Partial<AllOptions>;
+
+const defaultOptions: AllOptions = {
+  mergeListToParagraph: false,
+};
+
 function closeHeadingsUpTo(depth: number): string {
   let result = '';
   while (headingStack.length > 0) {
@@ -44,6 +56,10 @@ function fixQuotes(s: string): string {
     .replace(/&amp;#39;/g, "'")
     .replace(/(?<=\s)"(.*)"/g, '<q>$1</q>')
     .replace(/(?<=\s)'(.*)'/g, '<sq>$1</sq>');
+}
+
+function fixLists(html: string) {
+  return html.replace(/<\/p>(\s*)<p>\s*<(o|u)l>/g, '$1<$2l>');
 }
 
 function wrap(
@@ -91,7 +107,7 @@ function processToken(token: Token): string {
     case 'blockquote':
       return wrap('blockquote', token.tokens);
     case 'list':
-      return wrap(token.ordered ? 'ol' : 'ul', token.items);
+      return "<p>" + wrap(token.ordered ? 'ol' : 'ul', token.items) + "</p>";
     case 'list_item':
       return wrap('li', token.tokens, '');
     case 'paragraph':
@@ -132,11 +148,19 @@ function processToken(token: Token): string {
   }
 }
 
-function convertMarkdown(md: string) {
+function convertMarkdown(md: string, options?: Options) {
+  const allOptions = {
+    ...defaultOptions,
+    ...options,
+  };
   const tokens = marked.lexer(md);
-  return tokens.map(processToken).join('\n') + closeHeadingsUpTo(0);
+  let html = tokens.map(processToken).join('\n') + closeHeadingsUpTo(0);
+  if (allOptions.mergeListToParagraph) {
+    html = fixLists(html);
+  }
+  return html;
 }
 
-export function markdownToPretext(text: string) {
-  return convertMarkdown(text);
+export function markdownToPretext(text: string, options?: Options) {
+  return convertMarkdown(text, options);
 }
