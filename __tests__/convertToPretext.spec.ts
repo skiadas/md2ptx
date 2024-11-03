@@ -1,3 +1,4 @@
+import { expect, test, describe } from 'vitest';
 import { markdownToPretext } from '../src/index';
 
 describe('Markdown element behaviors', () => {
