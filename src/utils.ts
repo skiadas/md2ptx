@@ -10,6 +10,10 @@ export function makeText(txt: string): Text {
   return { type: 'text', value: txt };
 }
 
+export function makeQuote(txt: string, single: boolean = false): Element {
+  return x(single ? 'sq' : 'q', [makeText(txt)]);
+}
+
 // Extracts the text from a heading in order to form the heading id
 export function extractText(children: ElementContent[]): string {
   return children

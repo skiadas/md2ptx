@@ -7,6 +7,7 @@ import { Root as XastRoot, Element, ElementContent } from 'xast';
 import { x } from 'xastscript';
 import { xmlStringify } from './xml-stringify';
 import { makeHeading, makeText } from './utils';
+import { replaceQuotes } from './replace-quotes';
 
 export function convertMarkdown(text: string): string {
   return (
@@ -15,6 +16,7 @@ export function convertMarkdown(text: string): string {
       .use(remarkInlineLinks)
       .use(remarkGfm)
       .use(mdToPtx)
+      .use(replaceQuotes)
       // @ts-expect-error until the types cooperate
       .use(xmlStringify, {})
       .processSync(text)
