@@ -1,30 +1,41 @@
 import remarkParse from 'remark-parse';
 import remarkInlineLinks from 'remark-inline-links';
 import remarkGfm from 'remark-gfm';
-import { toXml } from 'xast-util-to-xml';
 import { unified } from 'unified';
+import { Root as MdastRoot } from 'mdast';
+import { Root as XastRoot } from 'xast';
 import { x } from 'xastscript';
-import { Heading, PhrasingContent, Root, RootContent, Text } from 'mdast';
+import { Heading, PhrasingContent, RootContent, Text } from 'mdast';
 import { Element, ElementContent } from 'xast';
+import { xmlStringify } from './xml-stringify';
 
 const headingNames = ['', 'chapter', 'section', 'subsection'];
 const headingPrefixes = ['', 'ch', 'sec', 'sub'];
 
 export function convertMarkdown(text: string): string {
-  const mdTree = unified()
-    .use(remarkParse)
-    .use(remarkInlineLinks)
-    .use(remarkGfm)
-    .parse(text);
+  return (
+    unified()
+      .use(remarkParse)
+      .use(remarkInlineLinks)
+      .use(remarkGfm)
+      .use(mdToPtx)
+      // @ts-expect-error until the types cooperate
+      .use(xmlStringify, {})
+      .processSync(text)
+      .toString()
+  );
+}
 
-  remarkInlineLinks()(mdTree);
-  const ptxElement = makePtx(mdTree);
-  return toXml(ptxElement).replace(/<\/?root>/g, '');
+function mdToPtx() {
+  return (tree: MdastRoot): XastRoot => makePtx(tree);
 }
 
 // TODO consider using  https://unifiedjs.com/explore/package/unist-util-is/
-function makePtx(mdTree: Root): Element {
-  const ptxStack: [number, Element][] = [[0, x('root', {})]];
+function makePtx(mdTree: MdastRoot): XastRoot {
+  // We technically shouldn't have to create this oneEl, but the types are not cooperating
+  const rootEl = x('root');
+  const root: XastRoot = x(null, [rootEl]);
+  const ptxStack: [number, Element][] = [[0, rootEl]];
   let ptxCurr: ElementContent[] = [];
   function closeHeadingsNoHigherThan(depth: number) {
     while (ptxStack.length > 0) {
@@ -61,7 +72,9 @@ function makePtx(mdTree: Root): Element {
   if (ptxCurr.length != 1) {
     throw new Error(`Excepted current length 1 but found ${ptxCurr.length}\n.`);
   }
-  return ptxCurr[0] as Element;
+  // Remove the rootEl now that we no longer need it
+  root.children = rootEl.children;
+  return root;
 }
 
 // Creates a heading element.
