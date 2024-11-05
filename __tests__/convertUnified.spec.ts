@@ -62,4 +62,16 @@ describe('Markdown element behaviors', () => {
       '<p>a paragraph then a list.<ol><li><p>item 1</p></li><li><p>item 2</p></li></ol></p>',
     );
   });
+  test('heading sections are properly created', () => {
+    expect(
+      convertMarkdown(
+        '# First heading\n\n## Second *heading*\n\n Some text here',
+        {
+          mergeListToParagraph: true,
+        },
+      ),
+    ).toBe(
+      '<chapter xml:id="ch-first-heading"><title>First heading</title><section xml:id="sec-second-heading"><title>Second <em>heading</em></title><p>Some text here</p></section></chapter>',
+    );
+  });
 });
