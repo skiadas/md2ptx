@@ -59,7 +59,7 @@ describe('Markdown element behaviors', () => {
         mergeListToParagraph: true,
       }),
     ).toBe(
-      '<p>a paragraph then a list.<ol><li>item 1</li><li>item 2</li></ol></p>',
+      '<p>a paragraph then a list.<ol><li><p>item 1</p></li><li><p>item 2</p></li></ol></p>',
     );
   });
 });

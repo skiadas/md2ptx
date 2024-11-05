@@ -8,14 +8,19 @@ import { x } from 'xastscript';
 import { xmlStringify } from './xml-stringify';
 import { makeHeading, makeText } from './utils';
 import { replaceQuotes } from './replace-quotes';
+import { fixLists, type FixListOptions } from './fix-lists';
 
-export function convertMarkdown(text: string): string {
+export function convertMarkdown(
+  text: string,
+  options?: Partial<FixListOptions>,
+): string {
   return (
     unified()
       .use(remarkParse)
       .use(remarkInlineLinks)
       .use(remarkGfm)
       .use(mdToPtx)
+      .use(fixLists, options)
       .use(replaceQuotes)
       // @ts-expect-error until the types cooperate
       .use(xmlStringify, {})
