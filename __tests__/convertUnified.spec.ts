@@ -1,6 +1,6 @@
 import { expect, test, describe } from 'vitest';
 
-import { convertMarkdown } from '../src/unified';
+import { convertMarkdown } from '../src/md-to-ptx';
 
 describe('Markdown element behaviors', () => {
   test('Simple text becomes a paragraph', () => {
