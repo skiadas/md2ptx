@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - badges
   pull_request:
     branches:
       - main
@@ -32,3 +34,33 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: ./coverage
+
+  create-badges:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+
+      - name: 🔴 Delete remote badges branch
+        run: git push origin --delete badges
+
+      - name: ➕ Create badges branch
+        run: git checkout -b badges
+
+      - name: ⚙️ Generating coverage badges
+        uses: jpb06/coverage-badges-action@latest
+        with:
+          branches: 'main'
+          target-branch: badges
+
+      - name: ⬆️ Push badges branch
+        run: git push origin badges
