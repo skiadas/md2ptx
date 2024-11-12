@@ -1,0 +1,159 @@
+diff --git a/__tests__/convertToPretext.spec.ts b/__tests__/convertToPretext.spec.ts
+index 4f6fc3c..5ff70db 100644
+--- a/__tests__/convertToPretext.spec.ts
++++ b/__tests__/convertToPretext.spec.ts
+@@ -14,4 +14,40 @@ describe('Markdown element behaviors', () => {
+   test('escaped characters are unescaped', () => {
+     expect(markdownToPretext('\\.')).toBe('<p>.</p>');
+   });
++  test('titles get lowercased when becoming ids', () => {
++    expect(markdownToPretext('# Title Here')).toBe(
++      '<chapter xml:id="ch-title-here">\n<title>Title Here</title>\n</chapter>\n',
++    );
++  });
++  test('single quotes stay normal', () => {
++    expect(markdownToPretext("I can't have that.")).toBe(
++      "<p>I can't have that.</p>",
++    );
++  });
++  test('quoted strings should be wrapped in <q> instead', () => {
++    expect(markdownToPretext('a "quote" here')).toBe(
++      '<p>a <q>quote</q> here</p>',
++    );
++  });
++  test('single quoted strings should be wrapped in <sq> instead', () => {
++    expect(markdownToPretext("a 'quoted string' here")).toBe(
++      '<p>a <sq>quoted string</sq> here</p>',
++    );
++  });
++  test('lists are wrapped in their own paragraph by default', () => {
++    expect(
++      markdownToPretext('a paragraph then a list.\n\n1. item 1\n2. item 2'),
++    ).toBe(
++      '<p>a paragraph then a list.</p>\n\n\n\n<p><ol>\n<li>item 1</li>\n<li>item 2</li>\n</ol></p>',
++    );
++  });
++  test('lists merge in prior paragraph if set in option', () => {
++    expect(
++      markdownToPretext('a paragraph then a list.\n\n1. item 1\n2. item 2', {
++        mergeListToParagraph: true,
++      }),
++    ).toBe(
++      '<p>a paragraph then a list.\n\n\n\n<ol>\n<li>item 1</li>\n<li>item 2</li>\n</ol></p>',
++    );
++  });
+ });
+diff --git a/src/index.ts b/src/index.ts
+index 2f48c3c..b25dd73 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -3,7 +3,19 @@ import { marked, Token, Tokens } from 'marked';
+ 
+ const headingNames = ['', 'chapter', 'section', 'subsection'];
+ const headingPrefixes = ['', 'ch', 'sec', 'sub'];
+-let headingStack: Tokens.Heading[] = [];
++const headingStack: Tokens.Heading[] = [];
++
++interface AllOptions {
++  // If true, tries to merge a list to the paragraph preceding it
++  // If false, keeps the list in its own paragraph
++  mergeListToParagraph: boolean;
++}
++
++type Options = Partial<AllOptions>;
++
++const defaultOptions: AllOptions = {
++  mergeListToParagraph: false,
++};
+ 
+ function closeHeadingsUpTo(depth: number): string {
+   let result = '';
+@@ -34,14 +46,22 @@ function escapeXml(unsafe: string) {
+         return '&amp;';
+       default:
+         return c;
+-      // case "'":
+-      //   return "&apos;";
+-      // case '"':
+-      //   return "&quot;";
+     }
+   });
+ }
+ 
++function fixQuotes(s: string): string {
++  return s
++    .replace(/&amp;quot;/g, '"')
++    .replace(/&amp;#39;/g, "'")
++    .replace(/(?<=\s)"(.*)"/g, '<q>$1</q>')
++    .replace(/(?<=\s)'(.*)'/g, '<sq>$1</sq>');
++}
++
++function fixLists(html: string) {
++  return html.replace(/<\/p>(\s*)<p>\s*<(o|u)l>/g, '$1<$2l>');
++}
++
+ function wrap(
+   tag: string,
+   tokens?: Token[],
+@@ -61,7 +81,7 @@ function processHeading(token: Tokens.Heading): string {
+   const preamble = closeHeadingsUpTo(token.depth);
+   pushHeading(token);
+   const title = token.tokens.map(processToken).join('');
+-  const id = title.replace(/\W+/g, '-');
++  const id = title.replace(/\W+/g, '-').toLowerCase();
+   return `${preamble}<${headingNames[token.depth]} xml:id="${
+     headingPrefixes[token.depth]
+   }-${id}">\n<title>${title}</title>\n`;
+@@ -87,7 +107,7 @@ function processToken(token: Token): string {
+     case 'blockquote':
+       return wrap('blockquote', token.tokens);
+     case 'list':
+-      return wrap(token.ordered ? 'ol' : 'ul', token.items);
++      return '<p>' + wrap(token.ordered ? 'ol' : 'ul', token.items) + '</p>';
+     case 'list_item':
+       return wrap('li', token.tokens, '');
+     case 'paragraph':
+@@ -98,7 +118,7 @@ function processToken(token: Token): string {
+       if ('tokens' in token) {
+         return token.tokens!.map(processToken).join('');
+       } else {
+-        return escapeXml(token.text);
++        return fixQuotes(escapeXml(token.text));
+       }
+     case 'codespan':
+       return `<c>${token.text}</c>`;
+@@ -109,7 +129,6 @@ function processToken(token: Token): string {
+     case 'del':
+       return wrap('delete', token.tokens, '');
+     case 'link':
+-      console.log(token);
+       // Note: we are losing the "title" that a Markdown link may have
+       // As the url attribute doesn't appear to have an appropriate entry
+       return wrap('url', token.tokens, '', new Map([['href', token.href]]));
+@@ -129,14 +148,19 @@ function processToken(token: Token): string {
+   }
+ }
+ 
+-function convertMarkdown(md: string) {
++function convertMarkdown(md: string, options?: Options) {
++  const allOptions = {
++    ...defaultOptions,
++    ...options,
++  };
+   const tokens = marked.lexer(md);
+-  return tokens.map(processToken).join('\n') + closeHeadingsUpTo(0);
+-  // return JSON.stringify(tokens);
++  let html = tokens.map(processToken).join('\n') + closeHeadingsUpTo(0);
++  if (allOptions.mergeListToParagraph) {
++    html = fixLists(html);
++  }
++  return html;
+ }
+ 
+-export function markdownToPretext(text: string) {
+-  const result = convertMarkdown(text);
+-  console.log(result);
+-  return result;
++export function markdownToPretext(text: string, options?: Options) {
++  return convertMarkdown(text, options);
+ }
