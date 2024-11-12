@@ -52,6 +52,7 @@ jobs:
 
       - name: 🔴 Delete remote badges branch
         run: git push origin --delete badges
+        continue-on-error: true
 
       - name: ➕ Create badges branch
         run: git checkout -b badges
