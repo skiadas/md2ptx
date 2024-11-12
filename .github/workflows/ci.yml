@@ -48,17 +48,21 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
 
-      - name: download coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage
-
       - name: 🔴 Delete remote badges branch
         run: git push origin --delete badges
         continue-on-error: true
 
       - name: ➕ Create badges branch
         run: git checkout -b badges
+
+      - name: download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+
+      - name: verify artifact
+        run: ls -la .
+          ls -la coverage
 
       - name: ⚙️ Generating coverage badges
         uses: jpb06/coverage-badges-action@latest
