@@ -44,6 +44,8 @@ jobs:
   create-badges:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
@@ -61,16 +63,8 @@ jobs:
           name: coverage
           path: ./coverage
 
-      - name: verify artifact
-        run: |
-          ls -la .
-          ls -la coverage
-
       - name: ⚙️ Generating coverage badges
         uses: jpb06/coverage-badges-action@latest
         with:
           branches: 'main'
           target-branch: badges
-
-      - name: ⬆️ Push badges branch
-        run: git push origin badges
